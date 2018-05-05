@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  
+  <title>CPP备忘 | XiangV</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+    <meta name="author" content="xiangwei">
+  
+  
+    <meta name="description" content="引言最近项目开发中遇到一些的小细节。很多时候我们明白导致问题的原理，但是在开发中还是会不小心犯错。这里列一下最近自己遇到的和看到的组内发现的错误。
+引用失效在一个模块中使用了vector来模拟队列，模块内一个线程以一定的频率从begin向end扫描，以处理那些达到条件的元素。处理的时候由于首先要判断条件是否满足，于是开发的时候手残的使用了引用。伪代码如下：">
+  
+  <meta name="description" content="引言最近项目开发中遇到一些的小细节。很多时候我们明白导致问题的原理，但是在开发中还是会不小心犯错。这里列一下最近自己遇到的和看到的组内发现的错误。 引用失效在一个模块中使用了vector来模拟队列，模块内一个线程以一定的频率从begin向end扫描，以处理那些达到条件的元素。处理的时候由于首先要判断条件是否满足，于是开发的时候手残的使用了引用。伪代码如下：">
+<meta name="keywords" content="CPP">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CPP备忘">
+<meta property="og:url" content="http://www.xiangv.xyz/2018/05/05/cpp-mind/index.html">
+<meta property="og:site_name" content="XiangV">
+<meta property="og:description" content="引言最近项目开发中遇到一些的小细节。很多时候我们明白导致问题的原理，但是在开发中还是会不小心犯错。这里列一下最近自己遇到的和看到的组内发现的错误。 引用失效在一个模块中使用了vector来模拟队列，模块内一个线程以一定的频率从begin向end扫描，以处理那些达到条件的元素。处理的时候由于首先要判断条件是否满足，于是开发的时候手残的使用了引用。伪代码如下：">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-05-05T08:35:03.543Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="CPP备忘">
+<meta name="twitter:description" content="引言最近项目开发中遇到一些的小细节。很多时候我们明白导致问题的原理，但是在开发中还是会不小心犯错。这里列一下最近自己遇到的和看到的组内发现的错误。 引用失效在一个模块中使用了vector来模拟队列，模块内一个线程以一定的频率从begin向end扫描，以处理那些达到条件的元素。处理的时候由于首先要判断条件是否满足，于是开发的时候手残的使用了引用。伪代码如下：">
+  
+  
+  <link rel="stylesheet" href="/css/style.css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+</head>
+
+<body>
+  <div class="wrapper">
+    <header id="header">
+  <div class="title">
+    <h1><a href="/">XiangV</a></h1>
+    <p><a href="/">码农，伪文艺</a></p>
+  </div>
+  <nav class="nav">
+    <ul>
+      
+        <li><a href="/archives">Archives</a></li>
+      
+        <li><a href="/about">About</a></li>
+      
+      
+    </ul>
+    <div class="clearfix"></div>
+  </nav>
+  <div class="clearfix"></div>
+</header>
+    <div class="content"><article class="post">
+  <header>
+    
+      <div class="icon"></div>
+      <a href="/2018/05/05/cpp-mind/">
+  <time datetime="2018-05-05T07:11:09.000Z">
+    2018-05-05
+  </time>
+</a>
+    
+    
+  
+    <h1 class="title">CPP备忘</h1>
+  
+
+  </header>
+  
+  <div class="entry">
+    
+      <h3 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h3><p>最近项目开发中遇到一些的小细节。很多时候我们明白导致问题的原理，但是在开发中还是会不小心犯错。这里列一下最近自己遇到的和看到的组内发现的错误。</p>
+<h3 id="引用失效"><a href="#引用失效" class="headerlink" title="引用失效"></a>引用失效</h3><p>在一个模块中使用了vector来模拟队列，模块内一个线程以一定的频率从begin向end扫描，以处理那些达到条件的元素。处理的时候由于首先要判断条件是否满足，于是开发的时候手残的使用了引用。伪代码如下：</p>
+<a id="more"></a>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">mutex.lock();</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; vec.size(); ++i) &#123;</span><br><span class="line">    Element &amp;ele = vec[i];</span><br><span class="line">    mutex.unlock();</span><br><span class="line">    <span class="keyword">bool</span> handled = CheckShouldHandle(ele);  <span class="comment">// 调用外部模块去检查</span></span><br><span class="line">    mutex.lock();</span><br><span class="line">    <span class="keyword">if</span> (handled) &#123;</span><br><span class="line">        Handle(ele);</span><br><span class="line">        vec.erase(vec.begin() + i);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">mutex.unlock();</span><br></pre></td></tr></table></figure>
+<p>而调用该模块的地方会有很多，其他模块会将element添加到vector中。基本如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Add</span><span class="params">(<span class="keyword">const</span> Tlement &amp;ele)</span> </span>&#123;</span><br><span class="line">    mutex.lock();</span><br><span class="line"> 	vec.push_back(ele);</span><br><span class="line">    mutex.unlock();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这就是产生问题的地方。调用外部模块时解开了锁，Add调用push_back，我们知道vector在capcity满了之后重新分配，于是原来的引用就失效了。</p>
+<p>这里实际上还有另一个问题，算法复杂度会在erase中间元素时由于移动后续元素成为O(n2)。</p>
+<p>一种解决方案是：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;Element&gt; remain;</span><br><span class="line">mutex.lock();</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; vec.size(); ++i) &#123;</span><br><span class="line">    Element ele = vec[i];</span><br><span class="line">    mutex.unlock();</span><br><span class="line">    <span class="keyword">bool</span> handled = CheckShouldHandle(ele);  <span class="comment">// 调用外部模块去检查</span></span><br><span class="line">    mutex.lock();</span><br><span class="line">    <span class="keyword">if</span> (handled) &#123;</span><br><span class="line">        Handle(ele);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        remain.push_back(ele);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">vec.swap(remain);</span><br><span class="line">mutex.unlock();</span><br></pre></td></tr></table></figure>
+<h3 id="越界"><a href="#越界" class="headerlink" title="越界"></a>越界</h3><p>实际上这个错误大家说了太多了，但是还是不小心就会中招。</p>
+<p>我们的一个服务使用是由两个团队开发的：算法策略团队和架构团队。</p>
+<p>其中一段代码大概是这样写的：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;Element&gt; items = Retrive();</span><br><span class="line"><span class="keyword">int</span> start_index = <span class="number">-1</span>;</span><br><span class="line">babababa</span><br><span class="line">bababa</span><br><span class="line">babab</span><br><span class="line">baba</span><br><span class="line">.</span><br><span class="line">.</span><br><span class="line">.</span><br><span class="line"></span><br><span class="line"><span class="keyword">auto</span> ele = items[start_index];</span><br></pre></td></tr></table></figure>
+<p>策略团队经过各种计算选择来确定start_index。但是实际上计算过程可能会永远没有设置start_index。 于是最后使用start_index的默认值，于是core了。</p>
+<h3 id="shared-ptr错误使用"><a href="#shared-ptr错误使用" class="headerlink" title="shared_ptr错误使用"></a>shared_ptr错误使用</h3><p>简单来说：shared_ptr保存的pointer在多线程下的安全性与shared_ptr没有关系</p>
+<ol>
+<li>shared_ptr多线程的安全性要靠atomic_load, atomic_store来保证</li>
+<li>raw pointer自己保证各种成员调用的安全性</li>
+</ol>
+<p>以上</p>
+
+    
+  </div>
+  <footer>
+    
+      
+      
+  <div class="tags">
+    <a class="tags-link" href="/tags/CPP/">CPP</a>
+  </div>
+
+    
+    <div class="clearfix"></div>
+  </footer>
+</article>
+
+</div>
+  </div>
+  <footer id="footer"><div class="copyright">
+  
+  &copy; 2018 <a href="/">xiangwei</a>
+  
+</div>
+<div class="theme-copyright">
+  Theme by <a href="https://github.com/orderedlist" target="_blank">orderedlist</a>
+</div>
+<div class="clearfix"></div>
+</footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
+<script src="/js/scale.fix.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+  (function($){
+    $('.fancybox').fancybox();
+  })(jQuery);
+</script>
+
+</body>
+</html>
